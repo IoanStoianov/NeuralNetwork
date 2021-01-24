@@ -1,0 +1,19 @@
+name: ketap123
+
+executables:
+  example-servant-minimal:
+    main: Iris.hs
+
+dependencies:
+  - base                    >= 4.7
+  - bytestring
+  - massiv
+  - random
+  - streamly
+  - mnist-idx
+  - vector
+  - transformers
+  - deepseq
+  - split
+  - hmatrix
+  - zlib

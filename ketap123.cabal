@@ -1,0 +1,31 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 07e509e331bd0aae35f71f47facdb64287be7b3b65387ce2ef7de8c60f9defa4
+
+name:           ketap123
+version:        0.0.0
+build-type:     Simple
+
+executable example-servant-minimal
+  main-is: Iris.hs
+  other-modules:
+      Paths_ketap123
+  build-depends:
+      base >=4.7
+    , bytestring
+    , deepseq
+    , hmatrix
+    , massiv
+    , mnist-idx
+    , random
+    , split
+    , streamly
+    , transformers
+    , vector
+    , matrix
+    , zlib
+  default-language: Haskell2010
