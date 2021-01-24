@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 07e509e331bd0aae35f71f47facdb64287be7b3b65387ce2ef7de8c60f9defa4
+-- hash: 6e8646e1a48f16c82a5b48fe54b01a99ccc27af649eb2c1d9b97d3347a7a33fd
 
-name:           ketap123
+name:           NeuralNet
 version:        0.0.0
 build-type:     Simple
 
 executable example-servant-minimal
   main-is: Iris.hs
   other-modules:
-      Paths_ketap123
+      Paths_NeuralNet
   build-depends:
       base >=4.7
     , bytestring
@@ -26,6 +26,5 @@ executable example-servant-minimal
     , streamly
     , transformers
     , vector
-    , matrix
     , zlib
   default-language: Haskell2010
