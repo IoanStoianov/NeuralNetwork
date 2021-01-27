@@ -1,6 +1,9 @@
 module Lib where
 
 import           Prelude as P
+
+import Numeric
+
 import           Control.Monad                  
 import           Control.Applicative            ( liftA2 )
 import qualified System.Random                 as R
@@ -55,7 +58,7 @@ build1Dmatrix ::  Vector Double -> Matrix Double
 build1Dmatrix = colVector
 
 multpVectors :: Vector Double -> Vector Double -> Vector Double
-multpVectors = V.zipWith (*)
+multpVectors vec1 vec2 = if V.null vec2 then vec1 else V.zipWith (*) vec1 vec2
 
 genWeights :: (Int, Int) -> IO (Matrix Double)
 genWeights (x, y) = fmap fromLists rand
@@ -83,7 +86,7 @@ derivative :: Vector Double -> Vector Double
 derivative = V.map (1 - ) 
 
 calculateError :: Vector Double -> Vector Double -> Vector Double
-calculateError = V.zipWith (\ a b -> 0.5* (a-b)*(a-b))
+calculateError = V.zipWith (\ a b -> b-a)
 
 updateWeights :: Layer Double -> Vector Double -> Layer Double
 updateWeights (Layer w b act) deltaVector =  Layer newWeights bias act
@@ -93,7 +96,7 @@ updateWeights (Layer w b act) deltaVector =  Layer newWeights bias act
 getInsideDelta :: Layer Double -> Vector Double -> Vector Double
 getInsideDelta (Layer w _ act) delta = V.fromList newDelta
   where newWeights = elementwise (*) w ( buildTransponseMatrix delta (ncols w)) 
-        (newDelta, _) = P.foldl sumColWeights ([],newWeights) [1..(ncols w)]
+        (newDelta, _) = V.foldl' sumColWeights ([],newWeights) (V.fromList [1..(ncols w)])
 
 
 sumColWeights :: ([Double], Matrix Double) -> Int -> ([Double], Matrix Double)
@@ -107,28 +110,31 @@ forward (input, output) (Layer w b act) = (out, out : output)
         out = activate (getCol 1 matrix)
 
 backprop :: ([Vector Double], Vector Double, Double, [Layer Double]) -> Layer Double -> ([Vector Double], Vector Double, Double, [Layer Double])
-backprop (h:output, delta, learnRate, newNet)  (Layer w b act)  = (output, nextDelta, learnRate, newLayer : newNet)
-  where deltaVec = V.map (* learnRate)  $ multpVectors h delta
+backprop (h:output, error, learnRate, newNet)  (Layer w b act)  = (output, nextDelta, learnRate, newLayer : newNet)
+  where deltaVec = V.map (* learnRate)  $ multpVectors h error
         deltaVector = multpVectors deltaVec (derivative h)
-        newLayer = updateWeights (Layer w b act) deltaVector
-        nextDelta = getInsideDelta newLayer deltaVector
+        deltaVector2 = multpVectors deltaVector (P.head output)
+        newLayer = updateWeights (Layer w b act) deltaVector2
+        nextDelta = getInsideDelta newLayer deltaVector2
 
 forwardAndBackward :: ([Layer Double], Double) -> (UV.Vector Double, UV.Vector Double) -> ([Layer Double], Double)
 forwardAndBackward (net, learnRate) (trainData,labels)  = (newNet, learnRate)
   where (input, expected) = (unbox trainData, unbox labels)
-        (_, nextOutput) = P.foldl forward (input,[]) net
+        (_, nextOutput) = V.foldl' forward (input,[V.empty]) (V.fromList net)
         net' = P.reverse net
         firstDelta = calculateError (P.head nextOutput) expected
-        (_, _, _, newNet) = foldl' backprop (nextOutput, firstDelta , learnRate, []) (V.fromList net')
+        (_, _, _, newNet) = V.foldl' backprop (nextOutput, firstDelta , learnRate, []) (V.fromList net')
 
 
 showOutput :: [Layer Double] -> Vector Double -> Vector Double -> IO ()
 showOutput net input expected = do
-  let (_, nextOutput) = P.foldl forward (input,[]) net
-  print (V.map round2 (P.head nextOutput))
-  print expected
+  let (nextOutput, _) = V.foldl' forward (input,[]) (V.fromList net)
+  print (V.map showFullPrecision nextOutput)
+  print (V.map showFullPrecision expected)
 
 
 round2 :: Double -> Double
 round2 x = fromIntegral (round $ x * 1e2) / 1e2
 
+showFullPrecision :: Double -> String
+showFullPrecision x = showFFloat Nothing (round2 x) ""

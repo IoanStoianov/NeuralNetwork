@@ -50,13 +50,13 @@ trainBatch (net, learnRate) (input,labels) = (newNet,learnRate)
 
 
 repeatTrain netData input = do
-  let newInput = Prelude.replicate 200 input
+  let newInput = Prelude.replicate 1 input
   let (trainedNet,_) = Prelude.foldl trainBatch netData newInput
   return trainedNet
 
 main :: IO ()
 main =  do
-  dataStream <- mnistStream 1 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
+  dataStream <- mnistStream 5000 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
   Just input <- S.head dataStream
 
   let [l1, l2, l3, o] = [784, 300, 50, 10]
@@ -70,7 +70,8 @@ main =  do
   let net = [Layer w1 b1 Sigmoid, Layer w2 b2 Sigmoid,  Layer w3 b3 Sigmoid]
 
   -- trainNet net dataStream 0.1
-  trainedNet <- repeatTrain (net, 0.1) input
+  -- trainedNet <- repeatTrain (net, 0.1) input
+  let (trainedNet,_) = trainBatch (net, 0.1) input
 
   let (trainD, label) = input
   showOutput net (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
