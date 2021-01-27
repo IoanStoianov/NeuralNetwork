@@ -5,19 +5,12 @@
 
 packages:
 - completed:
-    hackage: massiv-0.4.5.0@sha256:7edb7c783756fd0a17b26572f793200878be66acc1bf2c2204e52f1fd42bb632,4756
+    hackage: HUnit-1.6.1.0@sha256:b1d855377268ec3d4fae549d95249be66b87382d7f9e2718dbf0bbd0231564dd,1690
     pantry-tree:
-      size: 3783
-      sha256: f38a749ea6bb5ef7fbb7463901fcf2e26909e995b886757ba47a5f4d8566ded7
+      size: 878
+      sha256: d585b55417e21519fecac3fe24ea47f052ef7f32c661409eea7e871c56356a05
   original:
-    hackage: massiv-0.4.5.0
-- completed:
-    hackage: scheduler-1.4.2.1@sha256:435b8c8807072203881a46d27268c5753350f4bc5098987da844548f3874ea7f,2968
-    pantry-tree:
-      size: 838
-      sha256: a084a24830c56dcf7be6eb1defaca0669fed729b78b58d5668baa4e861d3ddb4
-  original:
-    hackage: scheduler-1.4.2.1
+    hackage: HUnit-1.6.1.0
 - completed:
     hackage: streamly-0.6.1@sha256:5c8501ffc49cb55563fbdb3e971d66a75b628ee4a9db2d93f108ec1ea961347a,25103
     pantry-tree:
@@ -25,20 +18,6 @@ packages:
       sha256: ebaea57d8709839ec468d0a9affe5beada0e3014f2ac76a5a3776b53af314a1d
   original:
     hackage: streamly-0.6.1
-- completed:
-    hackage: hmatrix-0.20.1@sha256:e1b5c4daba357a9106159ff1635c898b10c4a28fd6179d7f92162fda4a40b0f7,5200
-    pantry-tree:
-      size: 2228
-      sha256: fe92d86bc2712e6a865464182465f78620bba5ae6d5fa09aed0c6fe8591bbf9b
-  original:
-    hackage: hmatrix-0.20.1
-- completed:
-    hackage: zlib-0.6.2.2@sha256:eae95cb0cc80ff259de236b812072c4a74c6de398cb277ff0fba1148edc0253d,4809
-    pantry-tree:
-      size: 2536
-      sha256: df339906f330a7ef0fd324586138d2672bcc2c6bbecf566d8a30d3779bb7e77a
-  original:
-    hackage: zlib-0.6.2.2
 snapshots:
 - completed:
     size: 534126

@@ -27,7 +27,6 @@ loadMNIST fpI fpL = runMaybeT $ do
   _conv (label, v) = (v0, toExpectedVal label)
    where
     v0 = UV.map ((`subtract` 0.5) . (/ 255) . fromIntegral) v
-    -- v1 = A.fromVector' Par (Sz2 1 784) v0
 
 
 mnistStream :: Int -> FilePath -> FilePath -> IO (SerialT IO  ([UV.Vector Double], [UV.Vector Double]))
@@ -40,60 +39,33 @@ mnistStream batchSize fpI fpL = do
       dta'  = zip vs' labs'
   return $ S.fromList dta'
 
-
-
-
 trainNet :: [Layer Double] -> SerialT IO ([UV.Vector Double], [UV.Vector Double]) -> Double -> IO ([Layer Double], Double)
-trainNet net dataStream learnRate = do
-      S.foldl' trainBatch (net, learnRate) dataStream
+trainNet net dataStream learnRate = S.foldl' trainBatch (net, learnRate) dataStream
 
 trainBatch :: ([Layer Double], Double) -> ([UV.Vector Double], [UV.Vector Double]) -> ([Layer Double], Double)
-trainBatch (net, learnRate) (input,labels) = ([],0)
+trainBatch (net, learnRate) (input,labels) = (newNet,learnRate)
   where pairs = zip input labels
-        result = Prelude.foldl forwardAndBackward (net, learnRate) pairs
-      
-
-forwardAndBackward :: ([Layer Double], Double) -> (UV.Vector Double, UV.Vector Double) -> ([Layer Double], Double)
-forwardAndBackward (net, learnRate) (trainData,labels)  = (Prelude.reverse newNet, learnRate)
-  where (input, expected) = (unbox trainData, unbox labels)
-        (_, nextOutput) = Prelude.foldl forward (input,[]) net
-        net' = Prelude.reverse net
-        nextOutput' = Prelude.reverse nextOutput
-        firstDelta = calculateError (Prelude.head nextOutput') expected
-        (_, _, _, newNet) = Prelude.foldl backprop (nextOutput, firstDelta , learnRate, []) net
-
-backprop :: ([Vector Double], Vector Double, Double, [Layer Double]) -> Layer Double -> ([Vector Double], Vector Double, Double, [Layer Double])
-backprop (h:out, delta, learnRate, newNet)  (Layer w b act)  = (out, nextDelta, learnRate, newLayer : newNet)
-      where deltaVector = V.map (* learnRate)  $ multpVectors h delta
-            newLayer = updateWeights (Layer w b act) deltaVector
-            nextDelta = getInsideDelta newLayer deltaVector
-            
-
--- errorChange output expected layer = 0
---   where error = calculateError output expected
---       change =
-
-
--- lastLayerDelata output expected = error
---   where error = calculateError output expected
+        (newNet, _) = Prelude.foldl forwardAndBackward (net, learnRate) pairs
 
 main :: IO ()
 main =  do
-  dataStream <- mnistStream 100 "data/train-images-idx3-ubyte" "data/train-labels-idx1-ubyte"
- --  S.head x
+  dataStream <- mnistStream 100 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
+  Just input <- S.head dataStream
 
-  let [l1, l2, l3] = [784, 300, 10]
+  let [l1, l2, l3, o] = [784, 300, 50, 10]
   w1 <- genWeights (l1, l2)
-  b1 <- genBias l1
-  w2 <- genWeights (l2, l3)
-  b2 <- genBias l2
-  w3 <- genWeights (l3, l3)
-  b3 <- genBias l3
+  b1 <- genBias l2
+  -- w2 <- genWeights (l2, l3)
+  -- b2 <- genBias l3
+  w3 <- genWeights (l2, o)
+  b3 <- genBias o
+  -- Layer w2 b2 Sigmoid,
+  let net = [Layer w1 b1 Sigmoid,  Layer w3 b3 Sigmoid]
 
- --  return 0
-  let net = [Layer w1 b1 Sigmoid, Layer w2 b2 Sigmoid, Layer w3 b3 Sigmoid]
+  -- trainNet net dataStream 0.1
+  let (trainedNet,_) = trainBatch (net, 0.1) input
+  let (trainD, label) = input
 
-  trainNet net dataStream 0.1
-
+  showOutput trainedNet (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
   return ()
 

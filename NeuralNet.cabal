@@ -4,27 +4,92 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6e8646e1a48f16c82a5b48fe54b01a99ccc27af649eb2c1d9b97d3347a7a33fd
+-- hash: 7b9865d449f82f254b4d7749e6e3e1d7f3f8ff3f3cb6e19248e1ddc189b7bba3
 
 name:           NeuralNet
-version:        0.0.0
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/NeuralNet#readme>
+homepage:       https://github.com/githubuser/NeuralNet#readme
+bug-reports:    https://github.com/githubuser/NeuralNet/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2021 Author name here
+license:        BSD3
+license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
 
-executable example-servant-minimal
-  main-is: Iris.hs
+source-repository head
+  type: git
+  location: https://github.com/githubuser/NeuralNet
+
+library
+  exposed-modules:
+      Lib
   other-modules:
       Paths_NeuralNet
+  hs-source-dirs:
+      src
   build-depends:
-      base >=4.7
+      HUnit
+    , base >=4.7 && <5
     , bytestring
     , deepseq
-    , hmatrix
     , massiv
+    , matrix
     , mnist-idx
     , random
     , split
     , streamly
     , transformers
     , vector
-    , zlib
+  default-language: Haskell2010
+
+executable NeuralNet-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_NeuralNet
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , NeuralNet
+    , base >=4.7 && <5
+    , bytestring
+    , deepseq
+    , massiv
+    , matrix
+    , mnist-idx
+    , random
+    , split
+    , streamly
+    , transformers
+    , vector
+  default-language: Haskell2010
+
+test-suite NeuralNet-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_NeuralNet
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , NeuralNet
+    , base >=4.7 && <5
+    , bytestring
+    , deepseq
+    , massiv
+    , matrix
+    , mnist-idx
+    , random
+    , split
+    , streamly
+    , transformers
+    , vector
   default-language: Haskell2010
