@@ -68,7 +68,7 @@ getRandomList :: Int -> IO [Double]
 getRandomList len = Control.Monad.replicateM len getRandomWeight
 
 getRandomWeight :: IO Double
-getRandomWeight =   (/10) <$> R.getStdRandom (R.randomR (-5,5))
+getRandomWeight =   (/100) <$> R.getStdRandom (R.randomR (-5,5))
 
 unbox:: UV.Vector Double -> Vector Double
 unbox vec = V.fromList (UV.toList vec)
@@ -87,12 +87,12 @@ calculateError = V.zipWith (\ a b -> 0.5* (a-b)*(a-b))
 
 updateWeights :: Layer Double -> Vector Double -> Layer Double
 updateWeights (Layer w b act) deltaVector =  Layer newWeights bias act
-    where newWeights = elementwise (+) w ( buildTransponseMatrix deltaVector (nrows w))
-          bias = V.zipWith (+) b deltaVector
+  where newWeights = elementwise (+) w ( buildTransponseMatrix deltaVector (ncols w))
+        bias = V.zipWith (+) b deltaVector
 
 getInsideDelta :: Layer Double -> Vector Double -> Vector Double
-getInsideDelta (Layer w b act) delta = V.fromList newDelta
-  where newWeights = elementwise (*) w ( buildTransponseMatrix delta (nrows w)) 
+getInsideDelta (Layer w _ act) delta = V.fromList newDelta
+  where newWeights = elementwise (*) w ( buildTransponseMatrix delta (ncols w)) 
         (newDelta, _) = P.foldl sumColWeights ([],newWeights) [1..(ncols w)]
 
 
@@ -108,24 +108,27 @@ forward (input, output) (Layer w b act) = (out, out : output)
 
 backprop :: ([Vector Double], Vector Double, Double, [Layer Double]) -> Layer Double -> ([Vector Double], Vector Double, Double, [Layer Double])
 backprop (h:output, delta, learnRate, newNet)  (Layer w b act)  = (output, nextDelta, learnRate, newLayer : newNet)
-      where deltaVector = V.map (* learnRate)  $ multpVectors h delta -- TODO add derivativve
-            newLayer = updateWeights (Layer w b act) deltaVector
-            nextDelta = getInsideDelta newLayer deltaVector
+  where deltaVec = V.map (* learnRate)  $ multpVectors h delta
+        deltaVector = multpVectors deltaVec (derivative h)
+        newLayer = updateWeights (Layer w b act) deltaVector
+        nextDelta = getInsideDelta newLayer deltaVector
 
 forwardAndBackward :: ([Layer Double], Double) -> (UV.Vector Double, UV.Vector Double) -> ([Layer Double], Double)
-forwardAndBackward (net, learnRate) (trainData,labels)  = (net, learnRate)
+forwardAndBackward (net, learnRate) (trainData,labels)  = (newNet, learnRate)
   where (input, expected) = (unbox trainData, unbox labels)
         (_, nextOutput) = P.foldl forward (input,[]) net
-        -- net' = P.reverse net
-        -- nextOutput' = P.reverse nextOutput
-        -- firstDelta = calculateError (P.head nextOutput') expected
-        -- (_, _, _, newNet) = P.foldl backprop (nextOutput, firstDelta , learnRate, []) net
+        net' = P.reverse net
+        firstDelta = calculateError (P.head nextOutput) expected
+        (_, _, _, newNet) = foldl' backprop (nextOutput, firstDelta , learnRate, []) (V.fromList net')
 
 
 showOutput :: [Layer Double] -> Vector Double -> Vector Double -> IO ()
 showOutput net input expected = do
   let (_, nextOutput) = P.foldl forward (input,[]) net
-  print (P.last nextOutput)
+  print (V.map round2 (P.head nextOutput))
   print expected
 
+
+round2 :: Double -> Double
+round2 x = fromIntegral (round $ x * 1e2) / 1e2
 

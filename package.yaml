@@ -33,6 +33,7 @@ dependencies:
 - deepseq
 - split
 - HUnit
+- timeit
 
 library:
   source-dirs: src

@@ -2,6 +2,7 @@ module Main where
 
 import Lib
 
+import System.TimeIt
 import           Streamly
 import qualified Streamly.Prelude              as S
 import           Text.Printf                    ( printf )
@@ -47,25 +48,32 @@ trainBatch (net, learnRate) (input,labels) = (newNet,learnRate)
   where pairs = zip input labels
         (newNet, _) = Prelude.foldl forwardAndBackward (net, learnRate) pairs
 
+
+repeatTrain netData input = do
+  let newInput = Prelude.replicate 200 input
+  let (trainedNet,_) = Prelude.foldl trainBatch netData newInput
+  return trainedNet
+
 main :: IO ()
 main =  do
-  dataStream <- mnistStream 100 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
+  dataStream <- mnistStream 1 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
   Just input <- S.head dataStream
 
   let [l1, l2, l3, o] = [784, 300, 50, 10]
   w1 <- genWeights (l1, l2)
   b1 <- genBias l2
-  -- w2 <- genWeights (l2, l3)
-  -- b2 <- genBias l3
-  w3 <- genWeights (l2, o)
+  w2 <- genWeights (l2, l3)
+  b2 <- genBias l3
+  w3 <- genWeights (l3, o)
   b3 <- genBias o
-  -- Layer w2 b2 Sigmoid,
-  let net = [Layer w1 b1 Sigmoid,  Layer w3 b3 Sigmoid]
+  -- 
+  let net = [Layer w1 b1 Sigmoid, Layer w2 b2 Sigmoid,  Layer w3 b3 Sigmoid]
 
   -- trainNet net dataStream 0.1
-  let (trainedNet,_) = trainBatch (net, 0.1) input
-  let (trainD, label) = input
+  trainedNet <- repeatTrain (net, 0.1) input
 
-  showOutput trainedNet (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
+  let (trainD, label) = input
+  showOutput net (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
+  timeIt $ showOutput trainedNet (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
   return ()
 

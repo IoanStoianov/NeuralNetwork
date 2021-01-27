@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7b9865d449f82f254b4d7749e6e3e1d7f3f8ff3f3cb6e19248e1ddc189b7bba3
+-- hash: 25c3960e052338715205b9818fa5f7e29b03d15497321015549d8e23244c6342
 
 name:           NeuralNet
 version:        0.1.0.0
@@ -43,6 +43,7 @@ library
     , random
     , split
     , streamly
+    , timeit
     , transformers
     , vector
   default-language: Haskell2010
@@ -66,6 +67,7 @@ executable NeuralNet-exe
     , random
     , split
     , streamly
+    , timeit
     , transformers
     , vector
   default-language: Haskell2010
@@ -90,6 +92,7 @@ test-suite NeuralNet-test
     , random
     , split
     , streamly
+    , timeit
     , transformers
     , vector
   default-language: Haskell2010

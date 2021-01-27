@@ -58,14 +58,38 @@ updateWeightsTest = TestCase $ do
     assertEqual "UpdateWeightsTest matrix" newMatr expectedMatr
     assertEqual "UpdateWeightsTest bias" expectedBias newBias
 
+updateWeightsАsymmetricTest :: Test
+updateWeightsАsymmetricTest = TestCase $ do 
+    let matr = M.fromLists [[4,4,4,4], [0,0,0,0], [0,0,0,0]] :: M.Matrix Double
+        bias = V.fromList [1,1,1,1] :: V.Vector Double
+        delta = V.fromList [1,2,3,4] :: V.Vector Double
+        layer = Layer matr bias Id
+    let expectedMatr = M.fromLists [[5,5,5,5], [2,2,2,2], [3,3,3,3]] :: M.Matrix Double
+        expectedBias = V.fromList [2,3,4,5] :: V.Vector Double
+    
+    let (Layer newMatr newBias _) = updateWeights layer delta
+
+    assertEqual "UpdateWeightsTest matrix" newMatr expectedMatr
+    assertEqual "UpdateWeightsTest bias" expectedBias newBias
+
 getInsideDeltaTest :: Test
 getInsideDeltaTest = TestCase $ do
     let matr = M.fromLists [[1,1,1], [1,1,1], [1,1,1]] :: M.Matrix Double
-        bias = V.fromList [1,1,1] :: V.Vector Double
+        bias = V.empty
         delta = V.fromList [1,2,3] :: V.Vector Double
         layer = Layer matr bias Id
     let result = getInsideDelta layer delta
         expected = V.fromList [6,6,6] :: V.Vector Double
+    assertEqual "getInsideDeltaTest" expected result 
+
+getInsideDeltaАsymmetricTest :: Test
+getInsideDeltaАsymmetricTest = TestCase $ do
+    let matr = M.fromLists [[1,1,1,1], [1,1,1,1], [1,1,1,1]] :: M.Matrix Double
+        bias = V.empty
+        delta = V.fromList [1,2,3] :: V.Vector Double
+        layer = Layer matr bias Id
+    let result = getInsideDelta layer delta
+        expected = V.fromList [6,6,6,6] :: V.Vector Double
     assertEqual "getInsideDeltaTest" expected result 
 
 forwardTest :: Test
@@ -80,6 +104,8 @@ forwardTest = TestCase $ do
 
     assertEqual "ForwardTest" expected result
 
+forwardАsymmetricTest :: Test
+forwardАsymmetricTest = TestCase $ do
     let matr = M.fromLists [[1,2,3,1], [4,5,6,1], [7,8,9,1]] :: M.Matrix Double
         bias = V.fromList [1,1,1,1] :: V.Vector Double
         input = V.fromList [1,2,3,1] :: V.Vector Double
@@ -115,8 +141,11 @@ tests =
       calculateErrorTest,
       sumColWeightsTest,
       updateWeightsTest,
+      updateWeightsАsymmetricTest,
       getInsideDeltaTest,
+      getInsideDeltaАsymmetricTest,
       forwardTest,
+      forwardАsymmetricTest,
       backpropTest
     ]
 
