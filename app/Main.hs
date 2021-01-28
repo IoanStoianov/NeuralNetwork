@@ -3,6 +3,10 @@ module Main where
 import Lib
 
 import System.TimeIt
+
+import           Prelude as P
+
+import           Control.Monad
 import           Streamly
 import qualified Streamly.Prelude              as S
 import           Text.Printf                    ( printf )
@@ -34,7 +38,7 @@ mnistStream :: Int -> FilePath -> FilePath -> IO (SerialT IO  ([UV.Vector Double
 mnistStream batchSize fpI fpL = do
   Just dta <- loadMNIST fpI fpL
   -- Split data into batches
-  let (vs, labs) = Prelude.unzip dta
+  let (vs, labs) = P.unzip dta
       vs'   = chunksOf batchSize vs
       labs' = chunksOf batchSize labs
       dta'  = zip vs' labs'
@@ -46,20 +50,33 @@ trainNet net dataStream learnRate = S.foldl' trainBatch (net, learnRate) dataStr
 trainBatch :: ([Layer Double], Double) -> ([UV.Vector Double], [UV.Vector Double]) -> ([Layer Double], Double)
 trainBatch (net, learnRate) (input,labels) = (newNet,learnRate)
   where pairs = zip input labels
-        (newNet, _) = Prelude.foldl forwardAndBackward (net, learnRate) pairs
+        (newNet, _) = P.foldl forwardAndBackward (net, learnRate) pairs
 
 
+testBatch :: [Layer Double] -> [(Vector Double, Vector Double)] -> IO ()
+testBatch net batch = do
+  let result = map (tras net) batch
+  let x = P.foldl (\ sum (x, y) -> if x ==y then sum+1 else sum) 0 result
+      len = P.length result
+  putStr $ printf "Training accuracy %d/%d \n" (x::Int) len
+  return()
+
+tras :: [Layer Double] -> (Vector Double, Vector Double) -> (Int, Int)
+tras net (input,expected) = (getProposition1 output, getProposition1 expected)
+  where (output,_) = V.foldl' forward (input,[]) (V.fromList net)
+
+repeatTrain :: Monad m => ([Layer Double], Double) -> ([UV.Vector Double], [UV.Vector Double]) -> m [Layer Double]
 repeatTrain netData input = do
-  let newInput = Prelude.replicate 1 input
-  let (trainedNet,_) = Prelude.foldl trainBatch netData newInput
+  let newInput = P.replicate 5000 input
+  let (trainedNet,_) = V.foldl' trainBatch netData (V.fromList newInput)
   return trainedNet
 
-main :: IO ()
+  
 main =  do
-  dataStream <- mnistStream 5000 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
+  dataStream <- mnistStream 10 "../data/train-images-idx3-ubyte" "../data/train-labels-idx1-ubyte"
   Just input <- S.head dataStream
 
-  let [l1, l2, l3, o] = [784, 300, 50, 10]
+  let [l1, l2, l3, o] = [784, 80, 30, 10]
   w1 <- genWeights (l1, l2)
   b1 <- genBias l2
   w2 <- genWeights (l2, l3)
@@ -70,11 +87,14 @@ main =  do
   let net = [Layer w1 b1 Sigmoid, Layer w2 b2 Sigmoid,  Layer w3 b3 Sigmoid]
 
   -- trainNet net dataStream 0.1
-  -- trainedNet <- repeatTrain (net, 0.1) input
-  let (trainedNet,_) = trainBatch (net, 0.1) input
+  trainedNet <- repeatTrain (net, 0.3) input
+  -- let (trainedNet,_) = trainBatch (net, 0.1) input
 
   let (trainD, label) = input
-  showOutput net (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
-  timeIt $ showOutput trainedNet (unbox $ Prelude.head trainD) ( unbox $ Prelude.head label)
-  return ()
+  let merged = zip (map unbox trainD) (map unbox label)
+  -- showOutput net (P.head merged)
+  -- timeIt $ testBatch trainedNet merged
+  timeIt $ testBatch trainedNet (P.take 10 merged)
+
+  return trainedNet
 

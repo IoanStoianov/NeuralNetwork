@@ -126,11 +126,13 @@ forwardAndBackward (net, learnRate) (trainData,labels)  = (newNet, learnRate)
         (_, _, _, newNet) = V.foldl' backprop (nextOutput, firstDelta , learnRate, []) (V.fromList net')
 
 
-showOutput :: [Layer Double] -> Vector Double -> Vector Double -> IO ()
-showOutput net input expected = do
+showOutput :: [Layer Double] -> (Vector Double, Vector Double) -> IO ()
+showOutput net (input, expected) = do
   let (nextOutput, _) = V.foldl' forward (input,[]) (V.fromList net)
-  print (V.map showFullPrecision nextOutput)
+  print (V.map showFullPrecision nextOutput) 
+  print $ getProposition1 nextOutput
   print (V.map showFullPrecision expected)
+  print $ getProposition1 expected
 
 
 round2 :: Double -> Double
@@ -138,3 +140,12 @@ round2 x = fromIntegral (round $ x * 1e2) / 1e2
 
 showFullPrecision :: Double -> String
 showFullPrecision x = showFFloat Nothing (round2 x) ""
+
+getProposition :: Vector Double -> Vector Double -> Bool
+getProposition output expected = out == exp
+  where out = V.maxIndex output
+        exp = V.maxIndex expected
+
+getProposition1 :: Ord a => Vector a -> Int
+getProposition1 output = out
+  where out = V.maxIndex output
